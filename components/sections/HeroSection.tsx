@@ -23,20 +23,20 @@ const imgs = [
 ];
 
 // const imgs = [
-//   { src: "/pipis/pipi1.jpeg" },
-//   { src: "/pipis/pipi2.jpeg" },
-//   { src: "/pipis/pipi3.jpeg" },
-//   { src: "/pipis/pipi4.jpeg" },
-//   { src: "/pipis/pipi5.jpeg" },
-//   { src: "/pipis/pipi6.jpeg" },
-//   { src: "/pipis/pipi7.jpeg" },
-//   { src: "/pipis/pipi8.jpeg" },
-//   { src: "/pipis/pipi9.jpeg" },
-//   { src: "/pipis/pipi10.jpeg" },
-//   { src: "/pipis/pipi11.jpeg" },
-//   { src: "/pipis/pipi12.jpeg" },
-//   { src: "/pipis/pipi13.jpeg" },
-//   { src: "/pipis/pipi14.jpeg" },
+//   { src: "/pipis/pipi1.jpg" },
+//   { src: "/pipis/pipi2.jpg" },
+//   { src: "/pipis/pipi3.jpg" },
+//   { src: "/pipis/pipi4.jpg" },
+//   { src: "/pipis/pipi5.jpg" },
+//   { src: "/pipis/pipi6.jpg" },
+//   { src: "/pipis/pipi7.jpg" },
+//   { src: "/pipis/pipi8.jpg" },
+//   { src: "/pipis/pipi9.jpg" },
+//   { src: "/pipis/pipi10.jpg" },
+//   { src: "/pipis/pipi11.jpg" },
+//   { src: "/pipis/pipi12.jpg" },
+//   { src: "/pipis/pipi13.jpg" },
+//   { src: "/pipis/pipi14.jpg" },
 // ];
 
 
