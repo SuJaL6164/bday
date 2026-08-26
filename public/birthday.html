@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:#000;
+    color:#fff;
+    font-family:'Space Mono',monospace;
+    min-height:100vh;
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* ---------------- background reveal (behind everything) ---------------- */
+  .bg-reveal{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:0;
+    pointer-events:none;
+  }
+  .bg-reveal img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    opacity:0; /* animated in by GSAP, capped well below 100% so the number stays readable over it */
+    transform:scale(1.18);
+    filter:saturate(0.9) brightness(0.4) blur(18px);
+    will-change:transform, filter, opacity;
+  }
+  .bg-reveal::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 78%);
+  }
+
+  /* ---------------- intro counter ---------------- */
+  .intro{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#000;
+  }
+  .intro-num{
+    font-family:'Archivo Black',sans-serif;
+    font-size:clamp(5rem, 26vw, 16rem);
+    line-height:1;
+    letter-spacing:-0.02em;
+    will-change:transform, opacity, filter;
+    display:inline-flex;
+    font-variant-numeric:tabular-nums;
+  }
+  .od-col{
+    position:relative;
+    height:1em;
+    overflow:hidden;
+    display:inline-block;
+  }
+  .od-strip{
+    display:flex;
+    flex-direction:column;
+    will-change:transform, filter;
+  }
+  .od-digit{
+    height:1em;
+    line-height:1;
+    display:block;
+    text-align:center;
+  }
+  .intro-label{
+    position:absolute;
+    bottom:8vh;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#666;
+  }
+
+  /* ---------------- hero ---------------- */
+  .hero{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    opacity:0;
+  }
+
+  .watermark-btn{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    background:none;
+    border:none;
+    padding:2vh 4vw;
+    cursor:pointer;
+    z-index:4;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .watermark-btn:focus-visible{outline:2px solid #444; outline-offset:10px; border-radius:8px;}
+  .watermark{
+    font-family:'Archivo Black',sans-serif;
+    font-size:clamp(10rem, 46vw, 34rem);
+    line-height:1;
+    color:#fff;
+    opacity:0.045;
+    user-select:none;
+    white-space:nowrap;
+    transition:opacity 0.3s ease;
+    display:block;
+  }
+  .watermark-btn:hover .watermark{opacity:0.075;}
+  .watermark.is-revealed,
+  .watermark-btn:hover .watermark.is-revealed{
+    opacity:1;
+    color:#fff;
+  }
+
+  .press-prompt{
+    position:absolute;
+    top:calc(50% + 9vh);
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#777;
+    z-index:5;
+    opacity:0;
+    pointer-events:none;
+  }
+  .press-prompt .ring{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    border:1px solid #555;
+    animation:ring-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes ring-pulse{
+    0%,100%{transform:scale(1); opacity:0.5;}
+    50%{transform:scale(1.7); opacity:0;}
+  }
+
+  .corner{
+    position:absolute;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#666;
+    z-index:5;
+  }
+  .corner.br{
+    bottom:22px; right:24px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    color:#999;
+  }
+
+  .ember-layer{
+    position:fixed;
+    inset:0;
+    z-index:15;
+    pointer-events:none;
+  }
+  .ember{
+    position:fixed;
+    border-radius:50%;
+    background:radial-gradient(circle, #ffe2a8 0%, #ff9a3d 55%, transparent 80%);
+    pointer-events:none;
+  }
+  .smoke{
+    position:fixed;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(180,180,180,0.55) 0%, rgba(90,90,90,0.28) 45%, transparent 75%);
+    pointer-events:none;
+    filter:blur(1px);
+  }
+  .flame-lick{
+    position:fixed;
+    border-radius:50% 50% 50% 50% / 68% 68% 32% 32%;
+    background:radial-gradient(ellipse at 50% 70%, rgba(255,244,214,0.95) 0%, rgba(255,170,60,0.85) 32%, rgba(255,90,20,0.5) 58%, transparent 78%);
+    pointer-events:none;
+    filter:blur(1.5px);
+    mix-blend-mode:screen;
+    transform-origin:50% 100%;
+  }
+
+  .reveal-flash{
+    position:absolute;
+    top:50%; left:50%;
+    width:40px; height:40px;
+    transform:translate(-50%,-50%) scale(0);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,247,225,0.98) 0%, rgba(255,170,80,0.65) 35%, rgba(255,90,30,0.25) 60%, transparent 78%);
+    opacity:0;
+    pointer-events:none;
+    z-index:3;
+  }
+
+  /* ---------------- spotify-style mini player ---------------- */
+  .player{
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%) translateY(120%);
+    z-index:25;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    width:min(340px, calc(100vw - 32px));
+    padding:14px;
+    background:rgba(18,18,18,0.86);
+    backdrop-filter:blur(20px) saturate(160%);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:18px;
+    box-shadow:0 10px 32px rgba(0,0,0,0.5);
+    transition:transform 0.6s cubic-bezier(.16,1,.3,1), opacity 0.6s ease;
+    opacity:0;
+  }
+  .player.is-visible{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;
+  }
+  .player-art{
+    position:relative;
+    flex-shrink:0;
+    width:52px;
+    height:52px;
+    border-radius:11px;
+    overflow:hidden;
+    background:#151515;
+  }
+  .player-art img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    opacity:0;
+    transition:opacity 1s ease;
+  }
+  .player-art img.is-active{
+    opacity:1;
+  }
+  .player-info{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .player-title{
+    font-size:13px;
+    font-weight:700;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .player-artist{
+    font-size:10px;
+    color:#888;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .player-progress{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:2px;
+  }
+  .player-time{
+    font-size:9px;
+    color:#6b6b6b;
+    font-variant-numeric:tabular-nums;
+    flex-shrink:0;
+    width:26px;
+  }
+  .player-time.dur{text-align:right;}
+  .player-seek{
+    flex:1;
+    appearance:none;
+    -webkit-appearance:none;
+    height:3px;
+    border-radius:2px;
+    background:linear-gradient(to right, #fff var(--progress, 0%), rgba(255,255,255,0.16) var(--progress, 0%));
+    outline:none;
+    cursor:pointer;
+  }
+  .player-seek::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#fff;
+    opacity:0;
+    transition:opacity 0.15s ease;
+  }
+  .player-seek:hover::-webkit-slider-thumb,
+  .player-seek:active::-webkit-slider-thumb{opacity:1;}
+  .player-seek::-moz-range-thumb{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#fff;
+    border:none;
+    opacity:0;
+    transition:opacity 0.15s ease;
+  }
+  .player-seek:hover::-moz-range-thumb,
+  .player-seek:active::-moz-range-thumb{opacity:1;}
+  .player-btn{
+    flex-shrink:0;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:#fff;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform 0.15s ease;
+  }
+  .player-btn:hover{transform:scale(1.06);}
+  .player-btn:active{transform:scale(0.94);}
+  .player-btn svg{width:15px; height:15px;}
+  .player-btn #pauseIcon{display:none;}
+  .player.is-playing .player-btn #playIcon{display:none;}
+  .player.is-playing .player-btn #pauseIcon{display:block;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-reveal" id="bgReveal">
+    <img id="bgRevealImg" src="" alt="">
+  </div>
+
+  <audio
+  id="bgMusic"
+  loop
+  playsinline
+  preload="auto"
+  volume="0.7"
+>
+  <source src="/sounds/pipi-song.mp3" type="audio/mpeg">
+</audio>
+
+<div class="intro" id="intro">
+  <div class="intro-num" id="introNum">0</div>
+  <div class="intro-label">counting the years</div>
+</div>
+
+<div class="hero" id="hero">
+  <button class="watermark-btn" id="triggerBtn" aria-label="Press to reveal your age">
+    <span class="watermark" id="watermark">00</span>
+    <span class="reveal-flash" id="revealFlash"></span>
+  </button>
+
+  <!-- <div class="press-prompt" id="pressPrompt">
+    <span class="ring"></span>
+    <span>press to release</span>
+  </div> -->
+
+  <span class="corner br" id="liveReadout">—</span>
+</div>
+
+<div class="ember-layer" id="emberLayer"></div>
+
+<!-- ---------------- spotify-style mini player ---------------- -->
+<div class="player" id="musicPlayer">
+  <div class="player-art">
+    <img id="artA" class="is-active" src="/ref/girl1.jpg" alt="">
+    <img id="artB" src="/ref/girl2.jpg" alt="">
+  </div>
+  <div class="player-info">
+    <div class="player-title">Sweety Song</div>
+    <div class="player-artist">Birthday Playlist</div>
+    <div class="player-progress">
+      <span class="player-time" id="curTime">0:00</span>
+      <input type="range" id="seek" class="player-seek" min="0" max="100" value="0" step="0.1" aria-label="Seek">
+      <span class="player-time dur" id="durTime">0:00</span>
+    </div>
+  </div>
+  <button class="player-btn" id="playPauseBtn" aria-label="Play or pause song">
+    <svg id="playIcon" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="pauseIcon" viewBox="0 0 24 24" fill="#000"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+  </button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script type="module">
+  import { balloons, textBalloons } from "https://cdn.jsdelivr.net/npm/balloons-js/+esm";
+  window.__balloonsJS = { balloons, textBalloons };
+</script>
+<script>
+  // ---- EDIT THIS: real birth date/time, given in IST (India Standard Time) ----
+  // 14:30 IST on Aug 2, 2003 == 09:00 UTC on Aug 2, 2003  (birth year set so the reveal lands on 23)
+  const IST_OFFSET_MS = (5 * 60 + 30) * 60000;
+  // const BIRTH_UTC_MS = Date.UTC(2003, 7, 2, 9, 0, 0);
+  const BIRTH_UTC_MS = Date.UTC(2003, 7, 4, 18, 30, 0);
+  const shiftedBirth = new Date(BIRTH_UTC_MS + IST_OFFSET_MS); // read with getUTC* for IST wall-clock parts
+
+  function computeParts(){
+    // shift "now" into the same IST-wall-clock domain so getUTC* reads IST time
+    // regardless of the viewer's own device timezone
+    const shiftedNow = new Date(Date.now() + IST_OFFSET_MS);
+
+    const by = shiftedBirth.getUTCFullYear();
+    const bmo = shiftedBirth.getUTCMonth();
+    const bda = shiftedBirth.getUTCDate();
+    const bhh = shiftedBirth.getUTCHours();
+    const bmi = shiftedBirth.getUTCMinutes();
+    const bse = shiftedBirth.getUTCSeconds();
+
+    let years = shiftedNow.getUTCFullYear() - by;
+    let annivMs = Date.UTC(shiftedNow.getUTCFullYear(), bmo, bda, bhh, bmi, bse);
+    if(shiftedNow.getTime() < annivMs){
+      years--;
+      annivMs = Date.UTC(shiftedNow.getUTCFullYear() - 1, bmo, bda, bhh, bmi, bse);
+    }
+
+    const sinceAnniv = shiftedNow.getTime() - annivMs;
+    const totalSec = Math.floor(sinceAnniv / 1000);
+    return {
+      years,
+      days: Math.floor(totalSec / 86400),
+      hours: Math.floor((totalSec % 86400) / 3600),
+      minutes: Math.floor((totalSec % 3600) / 60),
+      seconds: totalSec % 60
+    };
+  }
+
+  const initial = computeParts();
+  const AGE = initial.years;
+  const DISPLAY_AGE = Math.max(0, AGE - 1);
+
+  document.getElementById('watermark').textContent = String(DISPLAY_AGE).padStart(2,'0');
+
+  // declared here (not further down) so the very first readout() call below
+  // can safely reference it
+  let revealed = false;
+
+  function readout(p){
+    // before the burn reveal, the watermark intentionally shows one year
+    // less (DISPLAY_AGE) as part of the reveal effect - the ticker must
+    // match that number, or it looks like the clock is wrong
+    const shownYears = revealed ? p.years : DISPLAY_AGE;
+    return `${shownYears}y · ${p.days}d · ${String(p.hours).padStart(2,'0')}:${String(p.minutes).padStart(2,'0')}:${String(p.seconds).padStart(2,'0')}`;
+  }
+  document.getElementById('liveReadout').textContent = readout(initial);
+
+  // ---------------- press-to-release trigger ----------------
+  const triggerBtn = document.getElementById('triggerBtn');
+  const watermarkEl = document.getElementById('watermark');
+  const emberLayer = document.getElementById('emberLayer');
+  const pressPrompt = document.getElementById('pressPrompt');
+  const revealFlash = document.getElementById('revealFlash');
+  const bgReveal = document.getElementById('bgReveal');
+  const bgRevealImg = document.getElementById('bgRevealImg');
+  let burning = false;
+  let balloonsJSFired = false;
+
+ 
+
+  function fireBalloonsJS(){
+    if(balloonsJSFired) return;
+    balloonsJSFired = true;
+    if(window.__balloonsJS){
+      const { balloons, textBalloons } = window.__balloonsJS;
+      balloons();
+      textBalloons([
+        { text: "Happy Birthday", fontSize: 120, color: "#ffffff" },
+        { text: "🎉🎂🎈", fontSize: 120, color: "#ffffff" },
+      ]);
+    }
+  }
+
+  // brings a background photo in behind the burned number once it's revealed -
+  // eases in from a soft, zoomed, blurred state into a settled frame, capped
+  // well under full opacity so the number and the photo both stay legible
+  // together instead of one washing out the other
+  const BG_REVEAL_SRC = '/bg2.jpg';
+  const BG_MAX_OPACITY = 0.85;
+  function revealBackground(){
+    bgRevealImg.src = BG_REVEAL_SRC;
+    gsap.killTweensOf([bgReveal, bgRevealImg]);
+    gsap.set(bgReveal, {opacity:1});
+    gsap.fromTo(bgRevealImg,
+      { opacity:0, scale:1.18, filter:'saturate(0.9) brightness(0.4) blur(18px)' },
+      {
+        opacity:BG_MAX_OPACITY,
+        scale:1,
+        filter:'saturate(0.9) brightness(0.55) blur(0px)',
+        duration:2.6,
+        ease:'power3.out',
+        onComplete: () => {
+          // slow ambient drift once it's settled in, like a living photo
+          gsap.to(bgRevealImg, {
+            scale:1.08,
+            duration:22,
+            ease:'sine.inOut',
+            yoyo:true,
+            repeat:-1
+          });
+        }
+      }
+    );
+  }
+
+  function spawnEmber(x, y, intensity){
+    const e = document.createElement('div');
+    e.className = 'ember';
+    const sz = (3 + Math.random()*7) * (0.7 + intensity*0.6);
+    const hue = 22 + Math.random()*32; // 22=red-orange .. 54=yellow
+    e.style.background = `radial-gradient(circle, hsla(${hue+18},100%,88%,1) 0%, hsla(${hue},100%,58%,1) 55%, transparent 80%)`;
+    e.style.boxShadow = `0 0 ${sz*2.2}px hsla(${hue},100%,60%,${0.55*intensity})`;
+    e.style.left = x + 'px';
+    e.style.top = y + 'px';
+    e.style.width = sz + 'px';
+    e.style.height = sz + 'px';
+    e.style.opacity = '0.95';
+    emberLayer.appendChild(e);
+
+    // manual turbulent path: embers don't just fly straight up, real sparks
+    // wobble and curl as they cool, with the sway growing then settling
+    const dur = 0.85 + Math.random()*0.7;
+    const riseDist = 50 + Math.random()*95;
+    const swayAmp = 10 + Math.random()*20;
+    const swayFreq = 2.2 + Math.random()*3.2;
+    const phase = Math.random()*Math.PI*2;
+    const spin = (Math.random()-0.5) * 180;
+    const state = {t:0};
+    gsap.to(state, {
+      t: 1,
+      duration: dur,
+      ease: 'power1.out',
+      onUpdate: () => {
+        const p = state.t;
+        const yOff = -riseDist * p;
+        const wobble = Math.sin(p*swayFreq*Math.PI + phase) * swayAmp * Math.min(1, p*2.2) * (1-p*0.4);
+        gsap.set(e, {
+          x: wobble,
+          y: yOff,
+          rotation: spin * p,
+          opacity: Math.max(0, 1 - p*p*1.05),
+          scale: 1 - p*0.7
+        });
+      },
+      onComplete: () => e.remove()
+    });
+  }
+
+  function spawnSmoke(x, y){
+    const s = document.createElement('div');
+    s.className = 'smoke';
+    const sz = 16 + Math.random()*22;
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    s.style.width = sz + 'px';
+    s.style.height = sz + 'px';
+    s.style.opacity = '0.5';
+    emberLayer.appendChild(s);
+    const drift = (Math.random()-0.5) * 40;
+    const drift2 = drift + (Math.random()-0.5) * 60;
+    gsap.to(s, {
+      y: '-=' + (70 + Math.random()*90),
+      x: '+=' + drift,
+      scale: 1.5 + Math.random()*0.8,
+      duration: 0.9 + Math.random()*0.5,
+      ease: 'sine.out'
+    });
+    gsap.to(s, {
+      x: '+=' + (drift2-drift),
+      scale: 2.6 + Math.random()*1.6,
+      opacity: 0,
+      duration: 1.1 + Math.random()*0.9,
+      delay: 0.7,
+      ease: 'sine.in',
+      onComplete: () => s.remove()
+    });
+  }
+
+  function spawnFlame(x, y, intensity){
+    const f = document.createElement('div');
+    f.className = 'flame-lick';
+    const w = (10 + Math.random()*10) * (0.6 + intensity*0.7);
+    const h = w * (1.6 + Math.random()*0.7);
+    f.style.left = (x - w/2) + 'px';
+    f.style.top = (y - h*0.85) + 'px';
+    f.style.width = w + 'px';
+    f.style.height = h + 'px';
+    f.style.opacity = '0';
+    emberLayer.appendChild(f);
+
+    const dur = 0.28 + Math.random()*0.22;
+    const lean = (Math.random()-0.5) * 22;
+    const tl = gsap.timeline({ onComplete: () => f.remove() });
+    tl.fromTo(f,
+      { opacity:0, scaleY:0.4, scaleX:0.7, y:4, skewX:lean*0.3 },
+      { opacity:0.85, scaleY:1.15, scaleX:1, y:-6, skewX:lean, duration:dur*0.4, ease:'power2.out' }
+    )
+    .to(f, { scaleY:0.85, scaleX:0.75, skewX:-lean*0.4, duration:dur*0.35, ease:'sine.inOut' })
+    .to(f, { opacity:0, y:-16, scaleY:1.3, scaleX:0.4, duration:dur*0.6, ease:'power1.in' });
+  }
+
+  function burnAndRelease(){
+    if(burning || revealed) return;
+    burning = true;
+
+    const rect = watermarkEl.getBoundingClientRect();
+    const cw = Math.ceil(rect.width);
+    const ch = Math.ceil(rect.height);
+    const scale = Math.min(1, 240 / ch);
+    const W = Math.max(1, Math.round(cw * scale));
+    const H = Math.max(1, Math.round(ch * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.position = 'fixed';
+    canvas.style.left = rect.left + 'px';
+    canvas.style.top = rect.top + 'px';
+    canvas.style.width = cw + 'px';
+    canvas.style.height = ch + 'px';
+    canvas.style.zIndex = '16';
+    canvas.style.pointerEvents = 'none';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    const style = getComputedStyle(watermarkEl);
+    const scaledFontSize = parseFloat(style.fontSize) * scale;
+    ctx.font = `${style.fontWeight} ${scaledFontSize}px ${style.fontFamily}`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(watermarkEl.textContent, W/2, H/2 + scaledFontSize*0.03);
+
+    const src = ctx.getImageData(0, 0, W, H);
+    const srcData = src.data;
+
+    // precompute a sweeping burn threshold per pixel: bottom ignites first,
+    // perturbed by layered value-noise so the front looks organic, not straight
+    const threshold = new Float32Array(W * H);
+    for(let y = 0; y < H; y++){
+      const sweep = 1 - (y / H);
+      for(let x = 0; x < W; x++){
+        const idx = y * W + x;
+        if(srcData[idx*4 + 3] < 10){ threshold[idx] = 99; continue; }
+        const noise = (
+          Math.sin(x*0.09 + y*0.05) +
+          Math.sin(x*0.05 - y*0.11 + 2.1) +
+          Math.sin((x+y)*0.025 + 4.4) +
+          Math.sin(x*0.17 - y*0.03 + 1.3) * 0.6
+        ) / 3.6;
+        threshold[idx] = sweep + noise * 0.26;
+      }
+    }
+
+    watermarkEl.style.opacity = '0';
+
+    const out = ctx.createImageData(W, H);
+    const outData = out.data;
+    const EDGE = 0.16;
+    const DECAY = 0.55; // how long charred embers glow/cool before turning to ash
+    const state = {p: -0.35};
+    let lastEmberTime = 0;
+    let lastSmokeTime = 0;
+    let lastFlameTime = 0;
+    const t0 = performance.now();
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        canvas.remove();
+        burning = false;
+      }
+    });
+
+    tl.to(state, {
+      p: 2.05,
+      duration: 2.85,
+      ease: 'sine.inOut',
+      onUpdate: () => {
+        const tRaw = (performance.now() - t0) * 0.001;
+        const t = tRaw * 6;
+        // real fire doesn't advance at a perfectly steady rate - add a gentle
+        // non-monotonic wobble so the front seems to catch and gutter
+        const pDisplay = state.p + Math.sin(tRaw*2.6) * 0.012 + Math.sin(tRaw*5.3+1) * 0.006;
+
+        for(let y = 0; y < H; y++){
+          const flicker = Math.sin(t*5 + y*0.22) * 0.03 + Math.sin(t*11 + y*0.5) * 0.012;
+          const rowSweep = 1 - (y / H);
+          const rowActivity = Math.max(0, 1 - Math.abs(rowSweep - pDisplay) / 0.42);
+          const warp = Math.round(Math.sin(y*0.16 + tRaw*3.2) * 2.6 * rowActivity);
+
+          for(let x = 0; x < W; x++){
+            const o = (y*W + x) * 4;
+            const sx = Math.min(W-1, Math.max(0, x - warp));
+            const si = y*W + sx;
+            const a0 = srcData[si*4+3];
+            if(a0 < 10){ outData[o+3] = 0; continue; }
+
+            const d = threshold[si] - pDisplay + flicker;
+
+            if(d < -EDGE - DECAY){
+              outData[o+3] = 0;
+            } else if(d < -EDGE){
+              // afterglow: charred pixel cools from ember-red to black, then dissolves
+              const k = (-EDGE - d) / DECAY; // 0 = just crossed ignition, 1 = fully spent
+              if(k < 0.45){
+                const k2 = k / 0.45;
+                outData[o]   = Math.round(255*(1-k2) + 100*k2);
+                outData[o+1] = Math.round(120*(1-k2) + 24*k2);
+                outData[o+2] = Math.round(35*(1-k2) + 10*k2);
+                outData[o+3] = 255;
+              } else {
+                const k2 = (k - 0.45) / 0.55;
+                outData[o]   = Math.round(100*(1-k2));
+                outData[o+1] = Math.round(24*(1-k2));
+                outData[o+2] = Math.round(10*(1-k2));
+                outData[o+3] = Math.round(255*(1-k2));
+              }
+            } else if(d < EDGE){
+              const k2 = (d + EDGE) / (2*EDGE); // 0 = just charred, 1 = about to ignite
+              if(k2 < 0.45){
+                const k = k2 / 0.45;
+                outData[o] = Math.round(12 + k*(255-12));
+                outData[o+1] = Math.round(5 + k*(110-5));
+                outData[o+2] = Math.round(2 + k*(30-2));
+                outData[o+3] = Math.round(255 * (0.2 + k*0.8));
+              } else {
+                const k = (k2 - 0.45) / 0.55;
+                outData[o]   = 255;
+                outData[o+1] = Math.round(110*(1-k) + 255*k);
+                outData[o+2] = Math.round(30*(1-k) + 250*k);
+                outData[o+3] = 255;
+              }
+            } else {
+              outData[o] = srcData[si*4]; outData[o+1] = srcData[si*4+1];
+              outData[o+2] = srcData[si*4+2]; outData[o+3] = a0;
+            }
+          }
+        }
+        ctx.putImageData(out, 0, 0);
+
+        // subtle heat-shimmer jitter on the canvas itself while actively burning
+        const p = pDisplay;
+        if(p > -0.15 && p < 1.3){
+          const jitter = (1 - Math.min(1, Math.abs(p - 0.5)*1.3)) * 1.3;
+          canvas.style.transform = `translate(${(Math.random()-0.5)*jitter}px, ${(Math.random()-0.5)*jitter}px)`;
+        }
+
+        const now = performance.now();
+        const frontY = rect.top + rect.height * Math.max(0, Math.min(1, 1 - p));
+        const intensity = Math.max(0, 1 - Math.abs(p - 0.5) * 1.1);
+
+        if(now - lastEmberTime > 32 && p < 1.15){
+          lastEmberTime = now;
+          const count = 2 + Math.round(intensity * 3);
+          for(let k=0; k<count; k++){
+            spawnEmber(
+              rect.left + Math.random()*rect.width,
+              frontY + (Math.random()-0.5)*18,
+              Math.max(0.3, intensity)
+            );
+          }
+        }
+        if(now - lastFlameTime > 55 && p > -0.1 && p < 1.1){
+          lastFlameTime = now;
+          const count = 1 + Math.round(intensity * 1.4);
+          for(let k=0; k<count; k++){
+            spawnFlame(
+              rect.left + Math.random()*rect.width,
+              frontY + (Math.random()-0.5)*10,
+              Math.max(0.3, intensity)
+            );
+          }
+        }
+        if(now - lastSmokeTime > 130 && p > -0.05 && p < 1.3){
+          lastSmokeTime = now;
+          spawnSmoke(rect.left + Math.random()*rect.width, frontY - 6);
+        }
+      }
+    }, 0)
+    .call(() => {
+      revealed = true;
+      canvas.style.transform = 'translate(0,0)';
+      watermarkEl.textContent = String(AGE).padStart(2,'0');
+      watermarkEl.classList.add('is-revealed');
+      fireBalloonsJS();
+      revealBackground();
+      gsap.to(pressPrompt, {opacity:0, duration:0.5, ease:'power2.out'});
+      gsap.fromTo(revealFlash,
+        {scale:0.2, opacity:0.95},
+        {scale:7.5, opacity:0, duration:1.3, ease:'power2.out'}
+      );
+
+      // the number itself blooms in solid white - starts soft/blurred/zoomed
+      // out of the ember afterglow, then settles sharp with a brief warm glow
+      gsap.fromTo(watermarkEl,
+        { opacity:0, scale:0.8, filter:'blur(22px)', color:'#fff' },
+        { opacity:1, scale:1, filter:'blur(0px)', duration:1.4, ease:'expo.out' }
+      );
+      gsap.fromTo(watermarkEl,
+        { textShadow:'0 0 0px rgba(255,200,140,0)' },
+        {
+          textShadow:'0 0 70px rgba(255,255,255,0.45)',
+          duration:0.75,
+          ease:'sine.out',
+          yoyo:true,
+          repeat:1,
+          delay:0.15,
+          onComplete: () => { watermarkEl.style.textShadow = 'none'; }
+        }
+      );
+    }, null, '+=0')
+    .call(() => {
+      triggerBtn.style.pointerEvents = 'none';
+      triggerBtn.setAttribute('aria-disabled', 'true');
+    }, null, '+=1.4');
+  }
+
+  triggerBtn.addEventListener('click', burnAndRelease);
+
+
+
+  //play music on button click
+  triggerBtn.addEventListener('click', () => {
+  if (bgMusic.paused) {
+    bgMusic.play().catch(() => {}); // catch autoplay-policy rejection silently
+    musicPlayer.classList.add('is-visible', 'is-playing');
+  }
+}, { once: true }); // only trigger the first press/burn
+
+  // ---------------- intro: odometer-style roll into the number, then zoom through ----------------
+  const introNum = document.getElementById('introNum');
+  introNum.textContent = '';
+
+  const finalDigits = String(DISPLAY_AGE).split('');
+  const cols = finalDigits.map((chr, idx) => {
+    const target = parseInt(chr, 10);
+    const loops = 1 + idx; // each column further right spins through more full loops
+    const colWrap = document.createElement('div');
+    colWrap.className = 'od-col';
+    const strip = document.createElement('div');
+    strip.className = 'od-strip';
+    for(let L = 0; L <= loops; L++){
+      for(let d = 0; d < 10; d++){
+        const s = document.createElement('span');
+        s.className = 'od-digit';
+        s.textContent = d;
+        strip.appendChild(s);
+      }
+    }
+    colWrap.appendChild(strip);
+    introNum.appendChild(colWrap);
+    return {strip, target, loops};
+  });
+
+  // measure one rendered digit's height so the roll distance is exact, not guessed
+  const digitH = cols.length ? cols[0].strip.querySelector('.od-digit').getBoundingClientRect().height : 0;
+
+  const tl = gsap.timeline();
+
+  cols.forEach((col, idx) => {
+    const finalIndex = col.loops * 10 + col.target;
+    const finalY = -finalIndex * digitH;
+    const dur = 1.05 + idx * 0.34;
+    let prevY = 0;
+    tl.to(col.strip, {
+      y: finalY,
+      duration: dur,
+      ease: 'back.out(1.3)',
+      onUpdate: function(){
+        const curY = gsap.getProperty(col.strip, 'y');
+        const vel = Math.abs(curY - prevY);
+        prevY = curY;
+        const blurAmt = Math.min(6, vel * 0.55);
+        col.strip.style.filter = blurAmt > 0.15 ? `blur(${blurAmt.toFixed(2)}px)` : 'blur(0px)';
+      },
+      onComplete: () => { col.strip.style.filter = 'blur(0px)'; }
+    }, 0);
+  });
+
+  tl.to({}, {duration: 0.35}) // brief hold on the final number once every column has landed
+    .to('#introNum', {
+      scale: 24,
+      opacity: 0,
+      filter: 'blur(20px)',
+      duration: 0.9,
+      ease: 'power4.in'
+    }, '>')
+    .to('.intro-label', {opacity: 0, duration: 0.35, ease: 'power2.in'}, '<')
+    .set('#hero', {opacity: 1}, '-=0.4')
+    .set('#intro', {display: 'none'})
+    .fromTo('.corner', {opacity:0, y:6}, {opacity:1, y:0, duration:0.6, stagger:0.1})
+    .to('#pressPrompt', {opacity:1, duration:0.7, ease:'power2.out'}, '<0.2')
+    .set('#pressPrompt', {pointerEvents:'auto'})
+    .call(() => {
+      // reveal the mini player once the intro sequence has resolved
+      document.getElementById('musicPlayer').classList.add('is-visible');
+    }, null, '<');
+
+  // ---------------- live readout tick ----------------
+  setInterval(() => {
+    const p = computeParts();
+    document.getElementById('liveReadout').textContent = readout(p);
+  }, 1000);
+
+  // ---------------- spotify-style mini player controls ----------------
+  const bgMusic = document.getElementById('bgMusic');
+  const musicPlayer = document.getElementById('musicPlayer');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const seek = document.getElementById('seek');
+  const curTimeEl = document.getElementById('curTime');
+  const durTimeEl = document.getElementById('durTime');
+
+  function formatTime(sec){
+    if(!isFinite(sec) || isNaN(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  let seeking = false;
+
+  playPauseBtn.addEventListener('click', () => {
+    if(bgMusic.paused){
+      bgMusic.play().catch(() => {});
+    } else {
+      bgMusic.pause();
+    }
+  });
+
+  bgMusic.addEventListener('play', () => musicPlayer.classList.add('is-playing'));
+  bgMusic.addEventListener('pause', () => musicPlayer.classList.remove('is-playing'));
+
+  bgMusic.addEventListener('loadedmetadata', () => {
+    durTimeEl.textContent = formatTime(bgMusic.duration);
+  });
+
+  bgMusic.addEventListener('timeupdate', () => {
+    if(seeking) return;
+    curTimeEl.textContent = formatTime(bgMusic.currentTime);
+    const pct = bgMusic.duration ? (bgMusic.currentTime / bgMusic.duration) * 100 : 0;
+    seek.value = pct;
+    seek.style.setProperty('--progress', pct + '%');
+  });
+
+  seek.addEventListener('input', () => {
+    seeking = true;
+    seek.style.setProperty('--progress', seek.value + '%');
+    curTimeEl.textContent = formatTime((seek.value / 100) * (bgMusic.duration || 0));
+  });
+
+  seek.addEventListener('change', () => {
+    if(bgMusic.duration){
+      bgMusic.currentTime = (seek.value / 100) * bgMusic.duration;
+    }
+    seeking = false;
+  });
+
+  // browsers block un-prompted audio autoplay - attempt it, and otherwise
+  // let the mini player's play button be the first user gesture that starts it
+  bgMusic.play().catch(() => {});
+
+  // ---------------- player art: crossfade through pipis/pipi1.jpg..pipi13.jpg ----------------
+  const PIPI_COUNT = 10;
+  const pipiSrc = (n) => `/ref/girl${n}.jpg`;
+  const artA = document.getElementById('artA');
+  const artB = document.getElementById('artB');
+  let pipiIndex = 1; // artA currently shows pipi1
+  let showingA = true;
+
+  setInterval(() => {
+    pipiIndex = (pipiIndex % PIPI_COUNT) + 1;
+    const nextSrc = pipiSrc(pipiIndex);
+    const incoming = showingA ? artB : artA;
+    const outgoing = showingA ? artA : artB;
+    incoming.src = nextSrc;
+    incoming.classList.add('is-active');
+    outgoing.classList.remove('is-active');
+    showingA = !showingA;
+  }, 3200);
+</script>
+
+
+
+</body>
+</html>
